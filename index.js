@@ -25,6 +25,7 @@ const client = new MongoClient(process.env.DB_URI, {
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
+  console.log("Auth ", req.originalUrl, authorization);
   if (!authorization) {
     return res.status(401).send({ message: "Unauthorized access" });
   }
@@ -70,7 +71,7 @@ async function run() {
       const classes = await classesCollection.find(query).toArray();
       res.send(classes);
     });
-    app.post("/selectClass", verifyJWT, async (req, res) => {
+    app.post("/selectClass", async (req, res) => {
       const classData = req.body;
       const result = await selectedClassesCollection.insertOne(classData);
       res.send(result);
@@ -133,12 +134,12 @@ async function run() {
       const instructors = await usersCollection.aggregate(pipeline).toArray();
       res.send(instructors);
     });
-    app.post("/addClass", verifyJWT, async (req, res) => {
+    app.post("/addClass", async (req, res) => {
       const classData = req.body;
       const result = await classesCollection.insertOne(classData);
       res.send(result);
     });
-    app.get("/instructor/classes/:email", verifyJWT, async (req, res) => {
+    app.get("/instructor/classes/:email", async (req, res) => {
       const email = req.params.email;
       const query = { "instructor.email": email };
       const result = await classesCollection.find(query).toArray();
@@ -146,13 +147,13 @@ async function run() {
     });
 
     //? Students API
-    app.get("/student/classes/:email", verifyJWT, async (req, res) => {
+    app.get("/student/classes/:email", async (req, res) => {
       const email = req.params.email;
       const query = { studentEmail: email };
       const result = await selectedClassesCollection.find(query).toArray();
       res.send(result);
     });
-    app.delete("/student/classes/:id", verifyJWT, async (req, res) => {
+    app.delete("/student/classes/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassesCollection.deleteOne(query);
@@ -160,11 +161,11 @@ async function run() {
     });
 
     //? Admin API
-    app.get("/classes", verifyJWT, async (req, res) => {
+    app.get("/classes", async (req, res) => {
       const classes = await classesCollection.find().toArray();
       res.send(classes);
     });
-    app.patch("/users/admin/:id", verifyJWT, async (req, res) => {
+    app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -175,7 +176,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-    app.patch("/users/instructor/:id", verifyJWT, async (req, res) => {
+    app.patch("/users/instructor/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -186,7 +187,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-    app.patch("/classes/status/:id", verifyJWT, async (req, res) => {
+    app.patch("/classes/status/:id", async (req, res) => {
       const id = req.params.id;
       const { feedback } = req.body;
 
@@ -207,7 +208,7 @@ async function run() {
     });
 
     // Payment API
-    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+    app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       if (price) {
         const amount = price * 100;
